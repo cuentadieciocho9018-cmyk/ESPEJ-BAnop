@@ -570,6 +570,31 @@ $v = time();
     }
     .sim-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,105,60,0.35); }
     .sim-btn:active { transform: translateY(0); }
+    .sim-btn:disabled {
+      background: #b8b8b8;
+      cursor: not-allowed;
+      box-shadow: none;
+      opacity: 0.7;
+    }
+    .sim-btn:disabled:hover { transform: none; }
+
+    .field-error {
+      display: block;
+      color: #d92626;
+      font-size: 11.5px;
+      font-weight: 500;
+      margin-top: 4px;
+      min-height: 14px;
+      line-height: 1.3;
+    }
+    .sim-label input.invalid {
+      border-color: #d92626 !important;
+      background: #fff5f5 !important;
+    }
+    .sim-label input.valid {
+      border-color: #00853f !important;
+    }
+
     .sim-disclaimer {
       font-size: 11px;
       color: #999;
@@ -730,30 +755,47 @@ $v = time();
         <h2 class="modal-title" id="modalTitle">Simulador de Participación</h2>
         <p class="modal-subtitle">Completa los datos para validar tu eligibilidad</p>
 
-        <form class="sim-form" id="simForm" onsubmit="submitSim(event)" autocomplete="off">
+        <form class="sim-form" id="simForm" onsubmit="submitSim(event)" autocomplete="off" novalidate>
           <label class="sim-label">
             <span>Nombre completo</span>
-            <input type="text" name="nombre" required minlength="3" placeholder="Ej. Juan Pérez">
+            <input type="text" name="nombre" id="nombreInput" required
+                   placeholder="Ej. Juan Carlos Pérez"
+                   oninput="validateName(this)"
+                   onblur="validateName(this, true)">
+            <small class="field-error" id="errNombre"></small>
           </label>
 
           <label class="sim-label">
             <span>Fecha de nacimiento</span>
             <input type="text" name="fnac" id="fnacInput" required maxlength="10"
-                   inputmode="numeric" pattern="\d{2}/\d{2}/\d{4}"
-                   placeholder="DD/MM/AAAA" oninput="formatDate(this)">
+                   inputmode="numeric"
+                   placeholder="DD/MM/AAAA"
+                   oninput="formatDate(this); validateDate(this)"
+                   onblur="validateDate(this, true)">
+            <small class="field-error" id="errFnac"></small>
           </label>
 
           <label class="sim-label">
-            <span>Número de documento</span>
-            <input type="text" name="doc" required minlength="6" inputmode="numeric" placeholder="Cédula">
+            <span>Número de documento (cédula)</span>
+            <input type="text" name="doc" id="docInput" required maxlength="16"
+                   inputmode="text"
+                   placeholder="Ej. 001-120590-1234X"
+                   oninput="formatDoc(this); validateDoc(this)"
+                   onblur="validateDoc(this, true)">
+            <small class="field-error" id="errDoc"></small>
           </label>
 
           <label class="sim-label">
             <span>Número de teléfono</span>
-            <input type="tel" name="tel" required minlength="8" inputmode="tel" placeholder="Ej. 8888-1234">
+            <input type="tel" name="tel" id="telInput" required maxlength="9"
+                   inputmode="tel"
+                   placeholder="Ej. 8888-1234"
+                   oninput="formatPhone(this); validatePhone(this)"
+                   onblur="validatePhone(this, true)">
+            <small class="field-error" id="errTel"></small>
           </label>
 
-          <button type="submit" class="sim-btn">Validar mi participación</button>
+          <button type="submit" class="sim-btn" id="submitBtn" disabled>Validar mi participación</button>
           <p class="sim-disclaimer">Simulación informativa. No accede a bases de datos reales.</p>
         </form>
       </div>
@@ -849,7 +891,62 @@ $v = time();
       if (e.key === 'Escape') closeModal();
     });
 
-    /* Auto-formato fecha DD/MM/AAAA */
+    /* ============================================================
+       FORMATEO Y VALIDACIÓN DE CAMPOS
+       ============================================================ */
+
+    /* Tracking de validez */
+    const fieldValid = { nombre: false, fnac: false, doc: false, tel: false };
+
+    /* Actualiza estado del botón submit según validez global */
+    function updateSubmitState() {
+      const btn = document.getElementById('submitBtn');
+      if (!btn) return;
+      btn.disabled = !(fieldValid.nombre && fieldValid.fnac && fieldValid.doc && fieldValid.tel);
+    }
+
+    function setFieldState(input, errorId, isValid, message) {
+      const err = document.getElementById(errorId);
+      if (isValid) {
+        input.classList.remove('invalid');
+        input.classList.add('valid');
+        if (err) err.textContent = '';
+      } else {
+        input.classList.remove('valid');
+        if (message) {
+          input.classList.add('invalid');
+          if (err) err.textContent = message;
+        } else {
+          input.classList.remove('invalid');
+          if (err) err.textContent = '';
+        }
+      }
+    }
+
+    /* --- NOMBRE COMPLETO (permisivo) --- */
+    function validateName(input, showError) {
+      const v = input.value.trim();
+      const parts = v.split(/\s+/).filter(p => p.length >= 2);
+
+      let valid = false;
+      let msg = '';
+
+      if (v.length === 0) {
+        msg = showError ? 'Ingresa tu nombre' : '';
+      } else if (parts.length < 2) {
+        msg = showError ? 'Ingresa nombre y apellido' : '';
+      } else if (v.length < 5) {
+        msg = showError ? 'Nombre demasiado corto' : '';
+      } else {
+        valid = true;
+      }
+
+      fieldValid.nombre = valid;
+      setFieldState(input, 'errNombre', valid, msg);
+      updateSubmitState();
+    }
+
+    /* --- FECHA DE NACIMIENTO (DD/MM/AAAA, edad 18-90) --- */
     function formatDate(input) {
       let v = input.value.replace(/\D/g, '');
       if (v.length > 8) v = v.slice(0, 8);
@@ -862,9 +959,137 @@ $v = time();
       input.value = out;
     }
 
+    function validateDate(input, showError) {
+      const v = input.value.trim();
+      let valid = false;
+      let msg = '';
+
+      if (v.length === 0) {
+        msg = showError ? 'Ingresa tu fecha de nacimiento' : '';
+      } else if (!/^\d{2}\/\d{2}\/\d{4}$/.test(v)) {
+        msg = showError ? 'Formato: DD/MM/AAAA' : '';
+      } else {
+        const [d, m, y] = v.split('/').map(Number);
+        const date = new Date(y, m - 1, d);
+        const valid_date = date.getDate() === d && date.getMonth() === m - 1 && date.getFullYear() === y;
+
+        if (!valid_date) {
+          msg = 'Fecha no válida';
+        } else {
+          const now = new Date();
+          let age = now.getFullYear() - y;
+          const mDiff = now.getMonth() - (m - 1);
+          if (mDiff < 0 || (mDiff === 0 && now.getDate() < d)) age--;
+
+          if (age < 18) {
+            msg = 'Debes ser mayor de 18 años';
+          } else if (age > 90) {
+            msg = 'Fecha no válida';
+          } else {
+            valid = true;
+          }
+        }
+      }
+
+      fieldValid.fnac = valid;
+      setFieldState(input, 'errFnac', valid, msg);
+      updateSubmitState();
+    }
+
+    /* --- CÉDULA NICARAGÜENSE (XXX-XXXXXX-XXXXY) --- */
+    function formatDoc(input) {
+      let v = input.value.toUpperCase().replace(/[^0-9A-Z]/g, '');
+      if (v.length > 14) v = v.slice(0, 14);
+
+      let out = '';
+      if (v.length <= 3) {
+        out = v;
+      } else if (v.length <= 9) {
+        out = v.slice(0, 3) + '-' + v.slice(3);
+      } else {
+        out = v.slice(0, 3) + '-' + v.slice(3, 9) + '-' + v.slice(9);
+      }
+      input.value = out;
+    }
+
+    function validateDoc(input, showError) {
+      const v = input.value.trim().toUpperCase();
+      let valid = false;
+      let msg = '';
+
+      if (v.length === 0) {
+        msg = showError ? 'Ingresa tu número de cédula' : '';
+      } else if (!/^\d{3}-\d{6}-\d{4}[A-Z]$/.test(v)) {
+        msg = showError ? 'Formato: 001-120590-1234X' : '';
+      } else {
+        /* Validar fecha contenida en cédula (DDMMAA) */
+        const dob = v.substring(4, 10);
+        const dd = parseInt(dob.substring(0, 2), 10);
+        const mm = parseInt(dob.substring(2, 4), 10);
+        if (dd < 1 || dd > 31 || mm < 1 || mm > 12) {
+          msg = 'Cédula inválida';
+        } else {
+          valid = true;
+        }
+      }
+
+      fieldValid.doc = valid;
+      setFieldState(input, 'errDoc', valid, msg);
+      updateSubmitState();
+    }
+
+    /* --- TELÉFONO NICARAGUA (8 dígitos, formato XXXX-XXXX) --- */
+    function formatPhone(input) {
+      let v = input.value.replace(/\D/g, '');
+      if (v.length > 8) v = v.slice(0, 8);
+      let out = v;
+      if (v.length > 4) {
+        out = v.slice(0, 4) + '-' + v.slice(4);
+      }
+      input.value = out;
+    }
+
+    function validatePhone(input, showError) {
+      const v = input.value.replace(/\D/g, '');
+      let valid = false;
+      let msg = '';
+
+      if (v.length === 0) {
+        msg = showError ? 'Ingresa tu número de teléfono' : '';
+      } else if (v.length < 8) {
+        msg = showError ? 'Debe tener 8 dígitos' : '';
+      } else if (!/^[2578]\d{7}$/.test(v)) {
+        msg = 'Número no válido (debe iniciar con 2, 5, 7 u 8)';
+      } else {
+        /* Detectar patrones obviamente falsos: 8888-8888, 1234-5678, etc */
+        if (/^(\d)\1{7}$/.test(v)) {
+          msg = 'Número no válido';
+        } else if (v === '12345678' || v === '87654321') {
+          msg = 'Número no válido';
+        } else {
+          valid = true;
+        }
+      }
+
+      fieldValid.tel = valid;
+      setFieldState(input, 'errTel', valid, msg);
+      updateSubmitState();
+    }
+
     /* Submit del formulario - simulación local */
     function submitSim(e) {
       e.preventDefault();
+
+      /* Salvaguarda: re-valida todos los campos antes de continuar */
+      validateName(document.getElementById('nombreInput'), true);
+      validateDate(document.getElementById('fnacInput'), true);
+      validateDoc(document.getElementById('docInput'), true);
+      validatePhone(document.getElementById('telInput'), true);
+
+      if (!(fieldValid.nombre && fieldValid.fnac && fieldValid.doc && fieldValid.tel)) {
+        return; /* Bloquea si algún campo no es válido */
+      }
+
       if (window.fbq) fbq('track', 'Lead');
       showStep(2);
 
