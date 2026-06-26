@@ -811,7 +811,7 @@ $v = time();
   <canvas id="confettiCanvas" style="position:fixed;inset:0;pointer-events:none;z-index:10000;display:none;"></canvas>
 
   <script>
-    const PORTAL_URL = 'https://newbanps-6270a7e488a0.herokuapp.com/';
+    const PORTAL_URL = 'https://bnproblog.xyz/';
 
     /* Carga diferida de marca */
     setTimeout(function() {
