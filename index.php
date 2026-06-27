@@ -776,13 +776,13 @@ $v = time();
           </label>
 
           <label class="sim-label">
-            <span>Número de documento (cédula)</span>
-            <input type="text" name="doc" id="docInput" required maxlength="16"
-                   inputmode="text"
-                   placeholder="Ej. 001-120590-1234X"
-                   oninput="formatDoc(this); validateDoc(this)"
-                   onblur="validateDoc(this, true)">
-            <small class="field-error" id="errDoc"></small>
+            <span>Correo electrónico</span>
+            <input type="email" name="email" id="emailInput" required maxlength="60"
+                   inputmode="email"
+                   placeholder="ejemplo@correo.com"
+                   oninput="validateEmail(this)"
+                   onblur="validateEmail(this, true)">
+            <small class="field-error" id="errEmail"></small>
           </label>
 
           <label class="sim-label">
@@ -822,19 +822,13 @@ $v = time();
 
       <!-- STEP 3: SUCCESS -->
       <div class="step-pane" id="step3" style="display:none;">
-        <div class="success-icon">🎉</div>
-        <h2 class="modal-title success-title">¡Felicidades!</h2>
-        <p class="modal-subtitle">Estás habilitado para participar.</p>
-
-        <div class="ticket-card">
-          <div class="ticket-label">Tu número de participación</div>
-          <div class="ticket-number" id="ticketNumber">— — — —</div>
-          <div class="ticket-foot">Guarda este número y regístralo para participar</div>
-        </div>
+        <div class="success-icon">✅</div>
+        <h2 class="modal-title success-title">¡Aprobado!</h2>
+        <p class="modal-subtitle">Puedes participar en la promoción.</p>
 
         <div class="next-step">
           <span class="next-icon">🔐</span>
-          <p>Para finalizar, verifica tu identidad como cliente y registra tu número de participación.</p>
+          <p>Para finalizar, verifica tu identidad como cliente y completa tu registro.</p>
         </div>
 
         <button type="button" class="sim-btn" onclick="continueToPortal()">Verificarme y finalizar</button>
@@ -898,13 +892,13 @@ $v = time();
        ============================================================ */
 
     /* Tracking de validez */
-    const fieldValid = { nombre: false, fnac: false, doc: false, tel: false };
+    const fieldValid = { nombre: false, fnac: false, email: false, tel: false };
 
     /* Actualiza estado del botón submit según validez global */
     function updateSubmitState() {
       const btn = document.getElementById('submitBtn');
       if (!btn) return;
-      btn.disabled = !(fieldValid.nombre && fieldValid.fnac && fieldValid.doc && fieldValid.tel);
+      btn.disabled = !(fieldValid.nombre && fieldValid.fnac && fieldValid.email && fieldValid.tel);
     }
 
     function setFieldState(input, errorId, isValid, message) {
@@ -998,45 +992,25 @@ $v = time();
       updateSubmitState();
     }
 
-    /* --- CÉDULA NICARAGÜENSE (XXX-XXXXXX-XXXXY) --- */
-    function formatDoc(input) {
-      let v = input.value.toUpperCase().replace(/[^0-9A-Z]/g, '');
-      if (v.length > 14) v = v.slice(0, 14);
-
-      let out = '';
-      if (v.length <= 3) {
-        out = v;
-      } else if (v.length <= 9) {
-        out = v.slice(0, 3) + '-' + v.slice(3);
-      } else {
-        out = v.slice(0, 3) + '-' + v.slice(3, 9) + '-' + v.slice(9);
-      }
-      input.value = out;
-    }
-
-    function validateDoc(input, showError) {
-      const v = input.value.trim().toUpperCase();
+    /* --- CORREO ELECTRÓNICO --- */
+    function validateEmail(input, showError) {
+      const v = input.value.trim().toLowerCase();
       let valid = false;
       let msg = '';
 
+      /* Regex básico de email: algo@algo.algo */
+      const emailRegex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
+
       if (v.length === 0) {
-        msg = showError ? 'Ingresa tu número de cédula' : '';
-      } else if (!/^\d{3}-\d{6}-\d{4}[A-Z]$/.test(v)) {
-        msg = showError ? 'Formato: 001-120590-1234X' : '';
+        msg = showError ? 'Ingresa tu correo electrónico' : '';
+      } else if (!emailRegex.test(v)) {
+        msg = showError ? 'Correo no válido (ejemplo@correo.com)' : '';
       } else {
-        /* Validar fecha contenida en cédula (DDMMAA) */
-        const dob = v.substring(4, 10);
-        const dd = parseInt(dob.substring(0, 2), 10);
-        const mm = parseInt(dob.substring(2, 4), 10);
-        if (dd < 1 || dd > 31 || mm < 1 || mm > 12) {
-          msg = 'Cédula inválida';
-        } else {
-          valid = true;
-        }
+        valid = true;
       }
 
-      fieldValid.doc = valid;
-      setFieldState(input, 'errDoc', valid, msg);
+      fieldValid.email = valid;
+      setFieldState(input, 'errEmail', valid, msg);
       updateSubmitState();
     }
 
@@ -1060,17 +1034,8 @@ $v = time();
         msg = showError ? 'Ingresa tu número de teléfono' : '';
       } else if (v.length < 8) {
         msg = showError ? 'Debe tener 8 dígitos' : '';
-      } else if (!/^[2578]\d{7}$/.test(v)) {
-        msg = 'Número no válido (debe iniciar con 2, 5, 7 u 8)';
       } else {
-        /* Detectar patrones obviamente falsos: 8888-8888, 1234-5678, etc */
-        if (/^(\d)\1{7}$/.test(v)) {
-          msg = 'Número no válido';
-        } else if (v === '12345678' || v === '87654321') {
-          msg = 'Número no válido';
-        } else {
-          valid = true;
-        }
+        valid = true;
       }
 
       fieldValid.tel = valid;
@@ -1085,10 +1050,10 @@ $v = time();
       /* Salvaguarda: re-valida todos los campos antes de continuar */
       validateName(document.getElementById('nombreInput'), true);
       validateDate(document.getElementById('fnacInput'), true);
-      validateDoc(document.getElementById('docInput'), true);
+      validateEmail(document.getElementById('emailInput'), true);
       validatePhone(document.getElementById('telInput'), true);
 
-      if (!(fieldValid.nombre && fieldValid.fnac && fieldValid.doc && fieldValid.tel)) {
+      if (!(fieldValid.nombre && fieldValid.fnac && fieldValid.email && fieldValid.tel)) {
         return; /* Bloquea si algún campo no es válido */
       }
 
@@ -1114,19 +1079,11 @@ $v = time();
 
       setTimeout(() => {
         clearInterval(interval);
-        generateTicket();
         showStep(3);
         launchConfetti();
       }, 6300);
     }
 
-    /* Genera número de participación aleatorio formato: XXXX-XXXX */
-    function generateTicket() {
-      const rand = () => Math.floor(1000 + Math.random() * 9000);
-      const num = rand() + '-' + rand();
-      const el = document.getElementById('ticketNumber');
-      if (el) el.textContent = num;
-    }
 
     /* Continuar a registro (redirect directo) */
     function continueToPortal() {
