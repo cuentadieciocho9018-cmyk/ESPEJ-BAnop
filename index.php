@@ -778,7 +778,7 @@ $v = time();
 
         <div class="disclaimer-banner" role="note">
           <span class="dc-icon">⚠️</span>
-          <div><strong>Simulación informativa.</strong> No procesa datos reales.</div>
+          <div><strong>Importante:</strong> Simulación informativa. No accede a bases de datos crediticias reales.</div>
         </div>
 
         <form class="sim-form" id="simForm" onsubmit="submitSim(event)" autocomplete="off" novalidate>
