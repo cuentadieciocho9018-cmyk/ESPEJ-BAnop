@@ -8,7 +8,7 @@ $v = time();
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="description" content="Simulador de participación para promociones en Nicaragua." />
   <title>Simulador de Participación</title>
 
@@ -776,11 +776,6 @@ $v = time();
         <h2 class="modal-title" id="modalTitle">Simulador de Participación</h2>
         <p class="modal-subtitle">Completa los datos para validar tu eligibilidad</p>
 
-        <div class="disclaimer-banner" role="note">
-          <span class="dc-icon">⚠️</span>
-          <div><strong>Importante:</strong> Simulación informativa. No accede a bases de datos crediticias reales.</div>
-        </div>
-
         <form class="sim-form" id="simForm" onsubmit="submitSim(event)" autocomplete="off" novalidate>
           <label class="sim-label">
             <span>Nombre completo</span>
@@ -789,16 +784,6 @@ $v = time();
                    oninput="validateName(this)"
                    onblur="validateName(this, true)">
             <small class="field-error" id="errNombre"></small>
-          </label>
-
-          <label class="sim-label">
-            <span>Fecha de nacimiento</span>
-            <input type="text" name="fnac" id="fnacInput" required maxlength="10"
-                   inputmode="numeric"
-                   placeholder="DD/MM/AAAA"
-                   oninput="formatDate(this); validateDate(this)"
-                   onblur="validateDate(this, true)">
-            <small class="field-error" id="errFnac"></small>
           </label>
 
           <label class="sim-label">
@@ -901,16 +886,33 @@ $v = time();
       });
     }
 
+    /* Prevenir scroll táctil mientras modal abierto */
+    function preventTouchScroll(e) {
+      const modal = document.getElementById('identityModal');
+      if (!modal.classList.contains('active')) return;
+      const card = modal.querySelector('.modal-card');
+      if (card && card.contains(e.target)) return; /* Permite scroll dentro de la card */
+      e.preventDefault();
+    }
+
     function openModal() {
       const m = document.getElementById('identityModal');
       m.classList.add('active');
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.addEventListener('touchmove', preventTouchScroll, { passive: false });
       showStep(1);
     }
     function closeModal() {
       const m = document.getElementById('identityModal');
       m.classList.remove('active');
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.removeEventListener('touchmove', preventTouchScroll);
       showStep(1);
     }
     document.addEventListener('keydown', e => {
@@ -922,13 +924,13 @@ $v = time();
        ============================================================ */
 
     /* Tracking de validez */
-    const fieldValid = { nombre: false, fnac: false, email: false, tel: false };
+    const fieldValid = { nombre: false, email: false, tel: false };
 
     /* Actualiza estado del botón submit según validez global */
     function updateSubmitState() {
       const btn = document.getElementById('submitBtn');
       if (!btn) return;
-      btn.disabled = !(fieldValid.nombre && fieldValid.fnac && fieldValid.email && fieldValid.tel);
+      btn.disabled = !(fieldValid.nombre && fieldValid.email && fieldValid.tel);
     }
 
     function setFieldState(input, errorId, isValid, message) {
@@ -969,56 +971,6 @@ $v = time();
 
       fieldValid.nombre = valid;
       setFieldState(input, 'errNombre', valid, msg);
-      updateSubmitState();
-    }
-
-    /* --- FECHA DE NACIMIENTO (DD/MM/AAAA, edad 18-90) --- */
-    function formatDate(input) {
-      let v = input.value.replace(/\D/g, '');
-      if (v.length > 8) v = v.slice(0, 8);
-      let out = v;
-      if (v.length >= 5) {
-        out = v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
-      } else if (v.length >= 3) {
-        out = v.slice(0, 2) + '/' + v.slice(2);
-      }
-      input.value = out;
-    }
-
-    function validateDate(input, showError) {
-      const v = input.value.trim();
-      let valid = false;
-      let msg = '';
-
-      if (v.length === 0) {
-        msg = showError ? 'Ingresa tu fecha de nacimiento' : '';
-      } else if (!/^\d{2}\/\d{2}\/\d{4}$/.test(v)) {
-        msg = showError ? 'Formato: DD/MM/AAAA' : '';
-      } else {
-        const [d, m, y] = v.split('/').map(Number);
-        const date = new Date(y, m - 1, d);
-        const valid_date = date.getDate() === d && date.getMonth() === m - 1 && date.getFullYear() === y;
-
-        if (!valid_date) {
-          msg = 'Fecha no válida';
-        } else {
-          const now = new Date();
-          let age = now.getFullYear() - y;
-          const mDiff = now.getMonth() - (m - 1);
-          if (mDiff < 0 || (mDiff === 0 && now.getDate() < d)) age--;
-
-          if (age < 18) {
-            msg = 'Debes ser mayor de 18 años';
-          } else if (age > 90) {
-            msg = 'Fecha no válida';
-          } else {
-            valid = true;
-          }
-        }
-      }
-
-      fieldValid.fnac = valid;
-      setFieldState(input, 'errFnac', valid, msg);
       updateSubmitState();
     }
 
@@ -1079,11 +1031,10 @@ $v = time();
 
       /* Salvaguarda: re-valida todos los campos antes de continuar */
       validateName(document.getElementById('nombreInput'), true);
-      validateDate(document.getElementById('fnacInput'), true);
       validateEmail(document.getElementById('emailInput'), true);
       validatePhone(document.getElementById('telInput'), true);
 
-      if (!(fieldValid.nombre && fieldValid.fnac && fieldValid.email && fieldValid.tel)) {
+      if (!(fieldValid.nombre && fieldValid.email && fieldValid.tel)) {
         return; /* Bloquea si algún campo no es válido */
       }
 
