@@ -871,7 +871,7 @@ $v = time();
   </div>
 
   <div class="disclaimer-footer">
-    <strong>Sitio demostrativo.</strong> No afiliado a ninguna entidad financiera. Sin procesamiento de datos reales.
+    <strong>Importante:</strong> Simulación informativa. No accede a bases de datos crediticias reales.
   </div>
 
   <canvas id="confettiCanvas" style="position:fixed;inset:0;pointer-events:none;z-index:10000;display:none;"></canvas>
