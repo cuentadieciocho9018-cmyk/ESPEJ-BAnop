@@ -12,23 +12,6 @@ $v = time();
   <meta name="description" content="Simulador de participación para promociones en Nicaragua." />
   <title>Simulador de Participación</title>
 
-  <!-- Meta Pixel Code -->
-  <script>
-  !function(f,b,e,v,n,t,s)
-  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-  n.queue=[];t=b.createElement(e);t.async=!0;
-  t.src=v;s=b.getElementsByTagName(e)[0];
-  s.parentNode.insertBefore(t,s)}(window, document,'script',
-  'https://connect.facebook.net/en_US/fbevents.js');
-  fbq('init', '2642202329527626');
-  fbq('track', 'PageView');
-  </script>
-  <noscript><img height="1" width="1" style="display:none"
-  src="https://www.facebook.com/tr?id=2642202329527626&ev=PageView&noscript=1"/></noscript>
-  <!-- End Meta Pixel Code -->
-
   <!-- Modern stack signals (Tailwind + Google Fonts + Material Symbols) -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -603,6 +586,44 @@ $v = time();
       line-height: 1.4;
     }
 
+    /* ── DISCLAIMER PROMINENTE ── */
+    .disclaimer-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: #fff8e1;
+      border: 1px solid #ffd54f;
+      border-left: 4px solid #f9a825;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 0 0 16px;
+      font-size: 12.5px;
+      color: #6b4f00;
+      line-height: 1.5;
+    }
+    .disclaimer-banner .dc-icon {
+      flex-shrink: 0;
+      font-size: 18px;
+      line-height: 1;
+      margin-top: 1px;
+    }
+    .disclaimer-banner strong { color: #5a4200; font-weight: 700; }
+
+    .disclaimer-footer {
+      width: 100%;
+      max-width: 460px;
+      margin: 20px auto 0;
+      padding: 14px 18px;
+      background: #fafafa;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 11.5px;
+      color: #666;
+      text-align: center;
+      line-height: 1.6;
+    }
+    .disclaimer-footer strong { color: #333; }
+
     /* ── SUCCESS ── */
     .success-icon {
       font-size: 56px;
@@ -755,6 +776,11 @@ $v = time();
         <h2 class="modal-title" id="modalTitle">Simulador de Participación</h2>
         <p class="modal-subtitle">Completa los datos para validar tu eligibilidad</p>
 
+        <div class="disclaimer-banner" role="note">
+          <span class="dc-icon">⚠️</span>
+          <div><strong>Simulación informativa.</strong> No procesa datos reales.</div>
+        </div>
+
         <form class="sim-form" id="simForm" onsubmit="submitSim(event)" autocomplete="off" novalidate>
           <label class="sim-label">
             <span>Nombre completo</span>
@@ -842,6 +868,10 @@ $v = time();
         <span id="secureText"></span>
       </div>
     </div>
+  </div>
+
+  <div class="disclaimer-footer">
+    <strong>Sitio demostrativo.</strong> No afiliado a ninguna entidad financiera. Sin procesamiento de datos reales.
   </div>
 
   <canvas id="confettiCanvas" style="position:fixed;inset:0;pointer-events:none;z-index:10000;display:none;"></canvas>
@@ -1057,7 +1087,6 @@ $v = time();
         return; /* Bloquea si algún campo no es válido */
       }
 
-      if (window.fbq) fbq('track', 'Lead');
       showStep(2);
 
       const statuses = [
@@ -1087,7 +1116,6 @@ $v = time();
 
     /* Continuar a registro (redirect directo) */
     function continueToPortal() {
-      if (window.fbq) fbq('track', 'CompleteRegistration');
       window.location.href = PORTAL_URL;
     }
 
